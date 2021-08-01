@@ -7,13 +7,14 @@ import {
   TextField,
   Grid,
 } from "@material-ui/core";
-import useStyles from "./style";
+import useStyles from "../ForgotPassword/style";
 import { Link, Redirect } from "react-router-dom";
 import isEmail from "validator/lib/isEmail";
 import { useFirebase } from "../../Components/FirebaseProvider";
-import Loading from "../../Helpers/Loading";
+import Loading from "../../Components/Loading/index";
 
-const Login = () => {
+const Login = (props) => {
+  const { location } = props;
   const style = useStyles();
   const { auth, user, loading } = useFirebase();
   const [form, setForm] = useState({
@@ -61,15 +62,18 @@ const Login = () => {
       } catch (err) {
         console.log(err);
         const newError = {};
-        switch (e.code) {
+        switch (err.code) {
           case "auth/user-not-found":
-            newError.email = "Email is already is used";
+            newError.email = "Email not found";
             break;
           case "auth/invalid-email":
             newError.email = "Email user is invalid";
             break;
           case "auth/wrong-password":
             newError.password = "Wrong password";
+            break;
+          case "auth/user-disabled":
+            newError.password = "User has been disabled";
             break;
           case "auth/operation-not-allowed":
             newError.email = "Unsupported email and password";
@@ -84,8 +88,13 @@ const Login = () => {
     }
   };
   if (loading) return <Loading />;
-  if (user) return <Redirect to="/" />;
-
+  if (user) {
+    const redirectTo =
+      location.state && location.state.form && location.state.form.pathName
+        ? location.state.form.pathName
+        : "/";
+    return <Redirect to={redirectTo} />;
+  }
   return (
     <Container maxWidth="xs">
       <Paper className={style.paper}>
@@ -126,13 +135,24 @@ const Login = () => {
               Sign In
             </Button>
           </Grid>
-          <Grid>
-            <Grid item className={style.goToSignUp}>
-              <Typography component={Link} to="/registrasi">
-                Don't have an account? Sign up
-              </Typography>
-            </Grid>
-          </Grid>
+          <div className={style.goToSignUp}>
+            <Typography
+              component={Link}
+              to="/registrasi"
+              className={style.goToSignUp}
+            >
+              Don't have an account? Sign Up
+            </Typography>
+          </div>
+          <div className={style.goToForgotPass}>
+            <Typography
+              component={Link}
+              to="/forgot-password"
+              className={style.goToForgotPass}
+            >
+              Forgot password?
+            </Typography>
+          </div>
         </form>
       </Paper>
     </Container>

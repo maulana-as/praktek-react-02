@@ -11,7 +11,7 @@ import useStyles from "./style";
 import { Link, Redirect } from "react-router-dom";
 import isEmail from "validator/lib/isEmail";
 import { useFirebase } from "../../Components/FirebaseProvider";
-import Loading from '../../Helpers/Loading'
+import Loading from '../../Components/Loading/index'
 
 const Registrasi = () => {
   const style = useStyles();
@@ -66,8 +66,8 @@ const Registrasi = () => {
       try {
         setSubmit(true)
         await auth.createUserWithEmailAndPassword(form.email, form.password);
-      } catch (err) {
-        console.log(err);
+      } catch (e) {
+        console.log(e);
         const newError = {};
         switch (e.code) {
           case "auth/email-already-exists":

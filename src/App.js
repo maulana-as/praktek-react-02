@@ -9,12 +9,18 @@ import { ThemeProvider } from "@material-ui/styles";
 
 import CssBaseline from "@material-ui/core/CssBaseline";
 import theme from "./Configs/Theme";
+import { SnackbarProvider } from 'notistack';
+
 
 function App() {
   return (
     <React.Fragment>
       <CssBaseline />
       <ThemeProvider theme={theme}>
+        <SnackbarProvider maxSnack={2} autoHideDuration={2000}  anchorOrigin={{
+        vertical: 'top',
+        horizontal: 'left',
+    }} >
         <FirebaseProvider>
           <Router>
             <Switch>
@@ -29,6 +35,7 @@ function App() {
             </Switch>
           </Router>
         </FirebaseProvider>
+      </SnackbarProvider>
       </ThemeProvider>
     </React.Fragment>
   );
