@@ -9,7 +9,7 @@ const useStyles = makeStyles(theme => ({
         textAlign:'center',
         marginTop: theme.spacing(3)
     },
-    goToLogin: { 
+    goToSignUp: { 
         textAlign: "right",
         marginTop: theme.spacing(2)        
     },
