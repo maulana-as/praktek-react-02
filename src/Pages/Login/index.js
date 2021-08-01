@@ -59,10 +59,10 @@ const Login = (props) => {
       try {
         setSubmit(true);
         await auth.signInWithEmailAndPassword(form.email, form.password);
-      } catch (err) {
-        console.log(err);
+      } catch (e) {
+        console.log(e);
         const newError = {};
-        switch (err.code) {
+        switch (e.code) {
           case "auth/user-not-found":
             newError.email = "Email not found";
             break;

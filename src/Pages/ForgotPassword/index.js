@@ -116,7 +116,7 @@ const ForgotPassword = (props) => {
           />
           <Grid item xs className={style.button}>
             <Button type="submit" color="primary" variant="contained" fullWidth>
-              Forgot Password
+             Send
             </Button>
           </Grid>
           <div className={style.goToSignUp}>
