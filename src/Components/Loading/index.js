@@ -15,7 +15,7 @@ function Loading() {
                 >
                     Loading...
                 </Typography>
-                <LinearProgress />
+                <LinearProgress value={100} />
             </div>
         </Container>
     )
