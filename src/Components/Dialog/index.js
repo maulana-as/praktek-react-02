@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-
+import { useFirebase } from '../../Components/FirebaseProvider'
+import PropTypes from 'prop-types'
 import {
   Button,
   TextField,
@@ -8,70 +9,48 @@ import {
   DialogContent,
   DialogTitle,
 } from "@material-ui/core";
+import { withRouter } from "react-router";
 
-const DialogAddProduct = () => {
-  const [form, setForm] = useState({
-    name: "",
-    price: "",
-    quantity: "",
-  });
-
-  const [error, setError] = useState({
-    name: "",
-    price: "",
-    quantity: '',
-});
-
+const DialogAddProduct = ({history, open, handleClose}) => {
+    console.log(handleClose, '<<<handleClose')
+  const { firestore, user } = useFirebase()  
+  const arvisDoc = firestore.collection(`arvis/${user.uid}/product`)
+   const [ nama, setNama ] = useState(""); 
+   const [ error, setError ] = useState("");
+  const [ isSubmit, setSubmit ] = useState(false)
   const handleSave = async (e) => {
     e.preventDefault();
-    const newError = { ...error };
+    setSubmit(true)
     try {
-      if (!form.name) {
-        newError.name = "Product name is required";
-      } 
-      if (!form.price) { 
-          newError.price = "Product price is required"
-      } else if (form.price < 0) { 
-          newError.price = "Product price should greater than equal 0"
+      if (!nama) { 
+          throw new Error("Product Name is required")
       }
-      if (!form.quantity) { 
-        newError.quantity = "Product quantity is required"
-    } else if (form.quantity < 0) { 
-        newError.quantity = "Quantity price should greater than equal 0"
-    }
-      const findErros = Object.values(newError).some((err) => err !== "");
-      if (findErros) setError(newError);
+      const newProduct =  await arvisDoc.add({nama})
+      history.push(`product/edit/${newProduct.id}`)
     } catch (e) {
       setError(e.message);
     }
-  };
-
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-    setError({
-      ...error,
-      [e.target.name]: "",
-    });
+    setSubmit(false)
   };
 
   return (
-    <Dialog open={true}>
+    <Dialog open={open} onClose={handleClose} disableBackdropClick={isSubmit} disableEscapeKeyDown={isSubmit}>
       <DialogTitle>Create New Product</DialogTitle>
       <DialogContent dividers>
-        <form onSubmit={handleSave} noValidate>
           <TextField
-            name="name"
+            id="nama"
             label="Product Name"
-            value={form.name}
-            onChange={handleChange}
-            helperText={error.name}
-            error={error.name ? true : false}
+            value={nama}
+            onChange={(e) => { 
+                setError("");
+                setNama(e.target.value)
+            }}
+            helperText={error}
+            error={error ? true : false}
             fullWidth
+            disabled={isSubmit}
           />
-          <TextField
+          {/* <TextField
             name="price"
             type="number"
             label="Product Price"
@@ -85,8 +64,8 @@ const DialogAddProduct = () => {
             onChange={handleChange}
             helperText={error.price}
             error={error.price ? true : false}
-          />
-          <TextField
+          /> */}
+          {/* <TextField
             name="quantity"
             type="number"
             label="Quantity Product"
@@ -100,17 +79,21 @@ const DialogAddProduct = () => {
             onChange={handleChange}
             helperText={error.quantity}
             error={error.quantity ? true : false}
-          />
+          /> */}
+      </DialogContent>
           <DialogActions>
-            <Button variant="contained">Cancel</Button>
-            <Button type="submit" color="primary" variant="contained">
+            <Button  disabled={isSubmit} onClick={handleClose}>Cancel</Button>
+            <Button  color="primary" onClick={handleSave} disabled={isSubmit}>
               Save
             </Button>
           </DialogActions>
-        </form>
-      </DialogContent>
     </Dialog>
   );
 };
 
-export default DialogAddProduct;
+DialogAddProduct.propTypes =  { 
+ open: PropTypes.bool.isRequired,
+ handleClose: PropTypes.func.isRequired 
+}
+
+export default  withRouter(DialogAddProduct);

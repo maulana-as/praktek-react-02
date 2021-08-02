@@ -16,7 +16,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import HomeIcon from "@material-ui/icons/Home";
 import StoreIcon from "@material-ui/icons/Store";
-import SettingsIcon from "@material-ui/icons/Settings";
+// import SettingsIcon from "@material-ui/icons/Settings";
 import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
 import ListItemText from "@material-ui/core/ListItemText";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
@@ -32,8 +32,9 @@ import swal from "sweetalert";
 
 export default function Private() {
   const { auth } = useFirebase();
+ 
   const classes = useStyles();
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -165,7 +166,7 @@ export default function Private() {
               );
             }}
           />
-          <Route
+          {/* <Route
             path="/setting"
             children={({ match, history }) => {
               return (
@@ -183,7 +184,7 @@ export default function Private() {
                 </ListItem>
               );
             }}
-          />
+          /> */}
         </List>
       </Drawer>
       <main className={classes.content}>
