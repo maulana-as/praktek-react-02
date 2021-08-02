@@ -54,36 +54,6 @@ const DialogAddProduct = ({ history, open, handleClose }) => {
           fullWidth
           disabled={isSubmit}
         />
-        {/* <TextField
-            name="price"
-            type="number"
-            label="Product Price"
-            fullWidth
-            InputProps={{
-              inputProps: {
-                min: 0,
-              },
-            }}
-            value={form.price}
-            onChange={handleChange}
-            helperText={error.price}
-            error={error.price ? true : false}
-          /> */}
-        {/* <TextField
-            name="quantity"
-            type="number"
-            label="Quantity Product"
-            fullWidth
-            InputProps={{
-              inputProps: {
-                min: 0,
-              },
-            }}
-            value={form.quantity}
-            onChange={handleChange}
-            helperText={error.quantity}
-            error={error.quantity ? true : false}
-          /> */}
       </DialogContent>
       <DialogActions>
         <Button disabled={isSubmit} onClick={handleClose}>

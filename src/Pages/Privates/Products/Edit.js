@@ -1,105 +1,163 @@
 import React, { useState, useEffect } from "react";
 import { TextField, Button, Grid, Typography } from "@material-ui/core";
 import { useFirebase } from "../../../Components/FirebaseProvider";
-import { useDocument } from 'react-firebase-hooks/firestore'
-import Loading from '../../../Components/Loading'
+import { useDocument } from "react-firebase-hooks/firestore";
+import Loading from "../../../Components/Loading";
 import { useSnackbar } from "notistack";
+import useStyles from "./style";
+import { Prompt } from 'react-router-dom'
 
-
-const Edit = ({match}) => {
-  const { firestore, user } = useFirebase()
-  const producArvis = firestore.doc(`arvis/${user.uid}/product/${match.params.productId}`)
-  const [snapshot, loading] = useDocument(producArvis)  
+const Edit = ({ match }) => {
+  const classes = useStyles();
+  const { firestore, user, storage } = useFirebase();
+  const producArvis = firestore.doc(
+    `arvis/${user.uid}/product/${match.params.productId}`
+  );
+  const [snapshot, loading] = useDocument(producArvis);
   const [isSubmit, setSubmit] = useState(false);
+  const [isChange, setChange] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const [form, setForm] = useState({
     nama: "",
     price: 0,
     stock: 0,
-    description: ""
+    description: "",
   });
-
-  console.log(form, '<<formNama')
+  const productStorage = storage.ref(`arvis/${user.uid}/product/${match.params.productId}`)
   const [error, setError] = useState({
     nama: "",
     price: "",
     stock: "",
-    description: ""
+    description: "",
   });
 
+  const validate = () => {
+    let newError = { ...error };
+    if (!form.nama) {
+      newError.nama = "Product name is required";
+    }
+    if (!form.price) {
+      newError.price = "Product price is required";
+    } else if (form.price <= 0) {
+      newError.price = "Product price cannot less than 0";
+    }
+    if (!form.stock) {
+      newError.stock = "Product stock is required";
+    } else if (form.stock <= 0) {
+      newError.stock = "Product stock cannot less than 0";
+    }
 
-  const validate = () => { 
-      let newError = { ...error }
-      if (!form.nama) { 
-          newError.nama = 'Product name is required'
-      } 
-      if (!form.price) { 
-          newError.price = 'Product price is required'
-      } else if (form.price <= 0) { 
-          newError.price = 'Product price cannot less than 0'
-      }
-      if (!form.stock) { 
-          newError.stock = 'Product stock is required'
-      } else if (form.stock <= 0) { 
-          newError.stock = 'Product stock cannot less than 0'
-      } 
+    if (!form.description) {
+      newError.description = "Product description is required";
+    }
+    return newError;
+  };
 
-      if (!form.description) { 
-          newError.description = 'Product description is required'
-      }
-      return newError
-  }
-
-  useEffect(() => { 
-      if (snapshot) { 
-        setForm(currentForm => ({ 
-            ...currentForm,
-            ...snapshot.data()
-        }))
-        console.log(snapshot, '<<<snapshot')
-      }
-  }, [snapshot])
+  useEffect(() => {
+    if (snapshot) {
+      setForm((currentForm) => ({
+        ...currentForm,
+        ...snapshot.data(),
+      }));
+    }
+  }, [snapshot]);
 
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
-    setError({ 
-        ...error,
-        [e.target.name]: ''
-    })
+    setError({
+      ...error,
+      [e.target.name]: "",
+    });
+    setChange(true)
   };
 
-  const handleSubmit = async (e) => { 
-      e.preventDefault();
-      const errors = validate();
-      const findErros = Object.values(errors).some((err) => err !== "");
-      if (findErros) setError(errors);
-      else { 
-          setSubmit(true)
-          try { 
-            await producArvis.set(form, { merge: true })
-            enqueueSnackbar(`Data success be saved on documen`, {
-                variant: "success",
-              });
-          } catch(e) { 
-            enqueueSnackbar(`${e.message}`, {
-                variant: "error",
-              });
-            }
-            setSubmit(false)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const errors = validate();
+    const findErros = Object.values(errors).some((err) => err !== "");
+    if (findErros) setError(errors);
+    else {
+      setSubmit(true);
+      try {
+        await producArvis.set(form, { merge: true });
+        enqueueSnackbar(`Data success be saved`, {
+          variant: "success",
+        });
+        setChange(false)
+      } catch (e) {
+        enqueueSnackbar(`${e.message}`, {
+          variant: "error",
+        });
       }
+      setSubmit(false);
+    }
+  };
+
+  if (loading) {
+    return <Loading />;
   }
 
-  if (loading) { 
-    return <Loading />
-  }
+  // handle upload image
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!['image/jpg', 'image/png', 'image/jpeg', 'image/gif'].includes(file.type)){
+      setError((error) => ({
+        ...error,
+        photo: `Unsupported file type : ${file.type}`,
+      }));
+    } else if (file.size >= 512000) {
+      setError((error) => ({
+        ...error,
+        photo: `File size cannot bigger than 512KB`,
+      }));
+    } else { 
+        const reader = new FileReader();
+        reader.onabort = () => { 
+            setError(error => ({ 
+                ...error, 
+                photo: `Reading aborted!` 
+            }))
+        }
+
+        reader.onerror = () => { 
+            setError(error => ({ 
+                ...error,
+                photo: `Reading error!`
+            }))
+        }
+
+        reader.onload = async () => { 
+            setSubmit(true)
+            try { 
+                const photoExtention = file.name.substring(file.name.lastIndexOf('.'))
+                const photoRef = productStorage.child(`${match.params.productId}${photoExtention}`)
+                const photoSnapsot = await photoRef.putString(reader.result, 'data_url')
+                const photoUrl = await photoSnapsot.ref.getDownloadURL()
+                setForm(currentForm => ({ 
+                    ...currentForm, 
+                    photo: photoUrl
+                }))
+                setChange(true)
+            } catch(e) { 
+                console.log(e.message)
+                setError(error => ({ 
+                    ...error,
+                    photo: e.message
+                }))
+            }
+            setSubmit(false)
+        }
+        reader.readAsDataURL(file)
+    }
+  };
 
   return (
     <div>
       <Grid container alignItems="center" justify="center">
-        <Grid item xs={12} sm={6}  md={6} lg= {6} >
+        <Grid item xs={12} sm={6} md={3}>
           <form id="edit-form" onSubmit={handleSubmit} noValidate>
             <TextField
               id="nama"
@@ -160,12 +218,51 @@ const Edit = ({match}) => {
           </form>
         </Grid>
         <Grid item xs={12} sm={6} md={6}>
-            <Typography>Upload Image</Typography>
+          <div>
+              { 
+                form.photo &&
+              <img 
+                src={form.photo}
+                alt={`product-${form.nama}`}
+                className={classes.previewProduct}
+              />
+              }
+            <input
+              type="file"
+              id="upload-image-product"
+              accept="image/jpg, image/png, image/jpeg, image/gif"
+              className={classes.inputImage}
+              onChange={handleImageUpload}
+            />
+            <label htmlFor="upload-image-product">
+              <Button variant="outlined" component="span" disabled={isSubmit || !isChange}>
+                Upload Product Image
+              </Button>
+            </label>
+            <div className={classes.errorNotifUpload}>
+              {error.photo && (
+                <Typography variant="error">
+                  {error.photo}
+                </Typography>
+              )}
+            </div>
+          </div>
         </Grid>
-        <Grid item xs={12} style={{marginTop: '10px'}}>
-            <Button form="edit-form" type="submit" color="primary" variant="contained">Save</Button>
+        <Grid item xs={12} style={{ marginTop: "10px" }}>
+          <Button
+            form="edit-form"
+            type="submit"
+            color="primary"
+            variant="contained"
+          >
+            Save
+          </Button>
         </Grid>
       </Grid>
+      <Prompt 
+        when={isChange}
+        message = 'Are you sure want to left this page?'
+      />
     </div>
   );
 };
