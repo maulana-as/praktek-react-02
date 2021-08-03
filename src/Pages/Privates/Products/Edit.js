@@ -13,6 +13,7 @@ const Edit = ({ match }) => {
   const producArvis = firestore.doc(
     `arvis/${user.uid}/product/${match.params.productId}`
   );
+  console.log(producArvis, '<<<producArvis')
   const [snapshot, loading] = useDocument(producArvis);
   const [isSubmit, setSubmit] = useState(false);
   const [isChange, setChange] = useState(false);
@@ -24,6 +25,7 @@ const Edit = ({ match }) => {
     description: "",
   });
   const productStorage = storage.ref(`arvis/${user.uid}/product/${match.params.productId}`)
+  console.log(productStorage, '<<product')
   const [error, setError] = useState({
     nama: "",
     price: "",

@@ -21,9 +21,18 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     height: "auto",
   },
-  photo: {
-    width: "150px",
+  card: { 
+    display: 'flex',
+    height: 'auto'
   },
+  photo: {
+    width: 150,
+  },
+  defaultPhoto: { 
+    width: 150,
+    alignSelf: 'center',
+    textAlign: 'center'
+  }
 }));
 
 export default useStyles;
